@@ -1,108 +1,75 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import {
   createRecordSchema,
   listRecordsQuerySchema,
   updateRecordSchema,
 } from "./record.validation";
 import * as recordService from "./record.service";
+import { asyncHandler } from "../../utils/async-handler";
+import { validateSchema } from "../../utils/validation";
 
-export const createRecord = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const parsed = createRecordSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errorCode: "VALIDATION_ERROR",
-        details: parsed.error.issues,
-      });
-    }
+export const createRecord = asyncHandler(async (req: Request, res: Response) => {
+  const input = validateSchema(
+    createRecordSchema,
+    req.body,
+    "Validation failed",
+    "VALIDATION_ERROR"
+  );
 
-    const data = await recordService.createRecord(parsed.data, req.user!.id);
-    return res.status(201).json({
-      success: true,
-      message: "Record created",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+  const data = await recordService.createRecord(input, req.user!.id);
+  return res.status(201).json({
+    success: true,
+    message: "Record created",
+    data,
+  });
+});
 
-export const listRecords = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const parsed = listRecordsQuerySchema.safeParse(req.query);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid query",
-        errorCode: "INVALID_QUERY",
-        details: parsed.error.issues,
-      });
-    }
+export const listRecords = asyncHandler(async (req: Request, res: Response) => {
+  const query = validateSchema(listRecordsQuerySchema, req.query, "Invalid query", "INVALID_QUERY");
 
-    const data = await recordService.listRecords(parsed.data);
-    return res.status(200).json({
-      success: true,
-      message: "Records fetched",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+  const data = await recordService.listRecords(query);
+  return res.status(200).json({
+    success: true,
+    message: "Records fetched",
+    data,
+  });
+});
 
-export const getRecordById = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const recordId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    const data = await recordService.getRecordById(recordId);
+export const getRecordById = asyncHandler(async (req: Request, res: Response) => {
+  const recordId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const data = await recordService.getRecordById(recordId);
 
-    return res.status(200).json({
-      success: true,
-      message: "Record fetched",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Record fetched",
+    data,
+  });
+});
 
-export const updateRecord = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const recordId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+export const updateRecord = asyncHandler(async (req: Request, res: Response) => {
+  const recordId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const input = validateSchema(
+    updateRecordSchema,
+    req.body,
+    "Validation failed",
+    "VALIDATION_ERROR"
+  );
 
-    const parsed = updateRecordSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errorCode: "VALIDATION_ERROR",
-        details: parsed.error.issues,
-      });
-    }
+  const data = await recordService.updateRecord(recordId, input);
+  return res.status(200).json({
+    success: true,
+    message: "Record updated",
+    data,
+  });
+});
 
-    const data = await recordService.updateRecord(recordId, parsed.data);
-    return res.status(200).json({
-      success: true,
-      message: "Record updated",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+export const deleteRecord = asyncHandler(async (req: Request, res: Response) => {
+  const recordId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  await recordService.deleteRecord(recordId);
 
-export const deleteRecord = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const recordId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-    await recordService.deleteRecord(recordId);
-
-    return res.status(200).json({
-      success: true,
-      message: "Record deleted",
-      data: null,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+  return res.status(200).json({
+    success: true,
+    message: "Record deleted",
+    data: null,
+  });
+});

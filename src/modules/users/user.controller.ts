@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import {
   createUserSchema,
   listUsersQuerySchema,
@@ -6,99 +6,66 @@ import {
   updateUserStatusSchema,
 } from "./user.validation";
 import * as userService from "./user.service";
+import { asyncHandler } from "../../utils/async-handler";
+import { validateSchema } from "../../utils/validation";
 
-export const createUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const parsed = createUserSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errorCode: "VALIDATION_ERROR",
-        details: parsed.error.issues,
-      });
-    }
+export const createUser = asyncHandler(async (req: Request, res: Response) => {
+  const input = validateSchema(
+    createUserSchema,
+    req.body,
+    "Validation failed",
+    "VALIDATION_ERROR"
+  );
 
-    const data = await userService.createUser(parsed.data);
-    return res.status(201).json({
-      success: true,
-      message: "User created",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+  const data = await userService.createUser(input);
+  return res.status(201).json({
+    success: true,
+    message: "User created",
+    data,
+  });
+});
 
-export const listUsers = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const parsed = listUsersQuerySchema.safeParse(req.query);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid query",
-        errorCode: "INVALID_QUERY",
-        details: parsed.error.issues,
-      });
-    }
+export const listUsers = asyncHandler(async (req: Request, res: Response) => {
+  const query = validateSchema(listUsersQuerySchema, req.query, "Invalid query", "INVALID_QUERY");
 
-    const data = await userService.listUsers(parsed.data);
-    return res.status(200).json({
-      success: true,
-      message: "Users fetched",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+  const data = await userService.listUsers(query);
+  return res.status(200).json({
+    success: true,
+    message: "Users fetched",
+    data,
+  });
+});
 
-export const updateUserRole = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+export const updateUserRole = asyncHandler(async (req: Request, res: Response) => {
+  const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const input = validateSchema(
+    updateUserRoleSchema,
+    req.body,
+    "Validation failed",
+    "VALIDATION_ERROR"
+  );
 
-    const parsed = updateUserRoleSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errorCode: "VALIDATION_ERROR",
-        details: parsed.error.issues,
-      });
-    }
+  const data = await userService.updateUserRole(userId, input.role);
+  return res.status(200).json({
+    success: true,
+    message: "User role updated",
+    data,
+  });
+});
 
-    const data = await userService.updateUserRole(userId, parsed.data.role);
-    return res.status(200).json({
-      success: true,
-      message: "User role updated",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+export const updateUserStatus = asyncHandler(async (req: Request, res: Response) => {
+  const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const input = validateSchema(
+    updateUserStatusSchema,
+    req.body,
+    "Validation failed",
+    "VALIDATION_ERROR"
+  );
 
-export const updateUserStatus = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const userId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-
-    const parsed = updateUserStatusSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errorCode: "VALIDATION_ERROR",
-        details: parsed.error.issues,
-      });
-    }
-
-    const data = await userService.updateUserStatus(userId, parsed.data.status);
-    return res.status(200).json({
-      success: true,
-      message: "User status updated",
-      data,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+  const data = await userService.updateUserStatus(userId, input.status);
+  return res.status(200).json({
+    success: true,
+    message: "User status updated",
+    data,
+  });
+});
