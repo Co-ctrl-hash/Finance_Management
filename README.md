@@ -306,18 +306,75 @@ Full schema is defined in `prisma/schema.prisma`.
 - Return suitable status codes (`400`, `401`, `403`, `404`, `409`, `500`).
 - Include validation details when applicable.
 
-## 8. Setup Instructions (to implement)
+## 8. Setup Instructions
 
-- Install dependencies.
-- Configure `.env` with `DATABASE_URL` and `JWT_SECRET`.
-- Run Prisma migration.
-- Start development server.
+1. Install dependencies
 
-## 9. Run Checklist (MVP)
+```bash
+npm install
+```
 
-- Auth login works.
-- Role restrictions are enforced.
-- User management works for admin.
+2. Configure environment in `.env`
+
+```env
+PORT=5000
+DATABASE_URL="postgresql://<user>:<password>@localhost:5432/<db_name>?schema=public"
+JWT_SECRET="replace-with-strong-secret"
+JWT_EXPIRES_IN="1d"
+```
+
+3. Generate Prisma client and run migrations
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+4. Seed default admin user
+
+```bash
+npm run prisma:seed
+```
+
+Default seeded credentials:
+
+- Email: `admin@finance.local`
+- Password: `Admin@123`
+
+5. Start development server
+
+```bash
+npm run dev
+```
+
+## 9. Automated Testing (Step 9)
+
+Integration tests are implemented using Vitest + Supertest in `tests/step9.integration.test.ts`.
+
+Covered flows:
+
+- Auth login success/failure
+- RBAC enforcement for Admin, Analyst, Viewer
+- Records create/update/soft-delete/list behavior
+- Dashboard summary/trends/category-totals access and output checks
+
+Run tests:
+
+```bash
+npm test
+```
+
+Note: tests require a valid PostgreSQL connection via `DATABASE_URL`.
+
+## 10. Assignment Coverage Checklist
+
+- User management with roles (`VIEWER`, `ANALYST`, `ADMIN`) and statuses (`ACTIVE`, `INACTIVE`)
+- JWT-based authentication and role-based authorization
+- Financial records CRUD with soft delete support
+- Filtering, pagination, and sorting for records listing
+- Dashboard endpoints for summary, trends, and category totals
+- Centralized validation and consistent error response shape
+- Prisma/PostgreSQL persistence with indexes for core query paths
 - Record CRUD and filters work.
 - Dashboard summary and trends work.
 - All record and dashboard queries ignore soft-deleted records.
