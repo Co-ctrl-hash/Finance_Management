@@ -351,6 +351,16 @@ npm run dev
 
 Integration tests are implemented using Vitest + Supertest in `tests/step9.integration.test.ts`.
 
+Recommended: use a dedicated `.env.test` so test runs do not affect development data.
+
+1. Create `.env.test` from `.env.test.example`
+2. Set `DATABASE_URL` to a separate test database
+3. Run integration tests with:
+
+```bash
+npm run test:integration
+```
+
 Covered flows:
 
 - Auth login success/failure
